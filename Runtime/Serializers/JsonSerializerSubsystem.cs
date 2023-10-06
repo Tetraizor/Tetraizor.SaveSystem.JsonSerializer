@@ -3,7 +3,6 @@ using System.Collections;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text;
-using UnityEngine;
 using Newtonsoft.Json;
 using Tetraizor.Bootstrap.Base;
 using Tetraizor.Systems.Save.Base;
@@ -22,7 +21,10 @@ namespace Tetraizor.Systems.Save.Serializers
             _isReading = true;
             _progress = 0;
 
-            FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            if (path == null || path == "")
+                DebugBus.LogWarning("Path is null or empty. Might not function properly.");
+
+            FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Read);
 
             // Create Reader object.
             StreamReader streamReader = new StreamReader(fileStream, true);
@@ -49,15 +51,18 @@ namespace Tetraizor.Systems.Save.Serializers
             fileStream.Flush();
             fileStream.Close();
 
-            _readResult = JsonConvert.DeserializeObject<T>(contents);
+            try
+            {
+                _readResult = JsonConvert.DeserializeObject<T>(contents);
+            }
+            catch (Exception e)
+            {
+                DebugBus.LogError(e.Message);
+            }
+
             if (_readResult == null)
             {
                 DebugBus.LogError("There was an error deserializing the result. File might be of other type or corrupted.");
-                Debug.Log("Corrupted!!");
-            }
-            else
-            {
-                Debug.Log(_readResult.GetType());
             }
 
             yield return null;
