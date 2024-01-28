@@ -10,7 +10,7 @@ using Tetraizor.DebugUtils;
 
 namespace Tetraizor.Systems.Save.Serializers
 {
-    public class JsonSerializer : SaveDataSerializerSubsystemBase
+    public class JsonSerializer : SaveDataSerializerBase
     {
         #region Serializer Methods
 
@@ -116,22 +116,6 @@ namespace Tetraizor.Systems.Save.Serializers
 
             _isWriting = false;
             _progress = 1;
-        }
-
-        #endregion
-
-        #region IPersistentSubsystem Methods
-
-        public override string GetSystemName()
-        {
-            return "Save System";
-        }
-
-        public override IEnumerator LoadSubsystem(IPersistentSystem system)
-        {
-            ((SaveSystem)system).SetSerializer(this);
-
-            yield return null;
         }
 
         #endregion
