@@ -2,9 +2,7 @@ using System;
 using System.Collections;
 using System.Threading.Tasks;
 using System.IO;
-using System.Text;
 using Newtonsoft.Json;
-using Tetraizor.Bootstrap.Base;
 using Tetraizor.Systems.Save.Base;
 using Tetraizor.DebugUtils;
 
@@ -24,10 +22,11 @@ namespace Tetraizor.Systems.Save.Serializers
             if (path == null || path == "")
                 DebugBus.LogWarning("Path is null or empty. Might not function properly.");
 
-            FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Read);
+            if (!File.Exists(path))
+                File.Create(path).Close();
 
             // Create Reader object.
-            StreamReader streamReader = new StreamReader(fileStream, true);
+            StreamReader streamReader = new StreamReader(path, true);
 
             string contents = "";
 
@@ -37,7 +36,6 @@ namespace Tetraizor.Systems.Save.Serializers
             var readTask = new Task(async () =>
             {
                 contents = await streamReader.ReadToEndAsync();
-
                 isReadFinished = true;
             });
 
@@ -48,8 +46,7 @@ namespace Tetraizor.Systems.Save.Serializers
                 yield return null;
             }
 
-            fileStream.Flush();
-            fileStream.Close();
+            streamReader.Close();
 
             try
             {
@@ -77,26 +74,22 @@ namespace Tetraizor.Systems.Save.Serializers
             _isWriting = true;
             _progress = 0;
 
-            FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
-
             string objectJSON = JsonConvert.SerializeObject(saveData, Formatting.Indented);
             bool isWriteFinished = false;
+
+            StreamWriter streamWriter = new StreamWriter(path, false);
 
             var writeTask = new Task(async () =>
             {
                 try
                 {
-                    byte[] info = new UTF8Encoding(true).GetBytes(objectJSON);
-                    await fileStream.WriteAsync(info);
-
+                    await streamWriter.WriteAsync(objectJSON);
                     isWriteFinished = true;
                 }
                 catch (Exception e)
                 {
                     DebugBus.LogError(e.ToString());
-
-                    fileStream.Close();
-                    fileStream.Dispose();
+                    streamWriter.Close();
                 }
             });
 
@@ -107,8 +100,9 @@ namespace Tetraizor.Systems.Save.Serializers
                 yield return null;
             }
 
-            fileStream.Dispose();
-            fileStream.Close();
+            streamWriter.Close();
+
+            isWriteFinished = true;
 
             _readResult = saveData;
 
