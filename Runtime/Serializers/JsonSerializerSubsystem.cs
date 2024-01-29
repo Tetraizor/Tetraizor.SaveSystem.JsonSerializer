@@ -5,10 +5,11 @@ using System.IO;
 using Newtonsoft.Json;
 using Tetraizor.Systems.Save.Base;
 using Tetraizor.DebugUtils;
+using Tetraizor.Bootstrap.Base;
 
 namespace Tetraizor.Systems.Save.Serializers
 {
-    public class JsonSerializer : SaveDataSerializerBase
+    public class JsonSerializer : SaveDataSerializerSubsystemBase
     {
         #region Serializer Methods
 
@@ -66,6 +67,19 @@ namespace Tetraizor.Systems.Save.Serializers
 
             _isReading = false;
             _progress = 1;
+        }
+
+        public override string GetSystemName()
+        {
+            return "SaveSystem";
+        }
+
+        public override IEnumerator LoadSubsystem(IPersistentSystem system)
+        {
+            _serializerID = _serializerCount;
+            _serializerCount++;
+
+            return null;
         }
 
         // Write
